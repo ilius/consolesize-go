@@ -3,6 +3,8 @@
 package consolesize
 
 import (
+	"os"
+	"strconv"
 	"syscall"
 	"unsafe"
 )
@@ -18,5 +20,16 @@ func GetConsoleSize() (int, int) {
 	}
 	_, _, _ = syscall.Syscall(syscall.SYS_IOCTL,
 		uintptr(syscall.Stdout), uintptr(syscall.TIOCGWINSZ), uintptr(unsafe.Pointer(&sz)))
-	return int(sz.cols), int(sz.rows)
+	cols := int(sz.cols)
+	rows := int(sz.rows)
+	if cols == 0 {
+		st := os.Getenv("COLUMNS")
+		if st != "" {
+			n, _ := strconv.ParseInt(st, 10, 64)
+			if n > 0 {
+				cols = int(n)
+			}
+		}
+	}
+	return cols, rows
 }
